@@ -624,6 +624,14 @@ function user_by_username(string $username): ?array
     return $row ?: null;
 }
 
+function user_by_username_including_deleted(string $username): ?array
+{
+    $st = app_pdo()->prepare('SELECT id, username, display_name, email, time_zone, bio, location, web, avatar_path, is_deleted, exclude_from_public_timeline, current_status, status_updated_at, created_at FROM users WHERE username = ? COLLATE NOCASE');
+    $st->execute([trim($username)]);
+    $row = $st->fetch();
+    return $row ?: null;
+}
+
 function current_user(): ?array
 {
     if (empty($_SESSION['user_id'])) {

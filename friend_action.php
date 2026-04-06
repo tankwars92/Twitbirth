@@ -38,7 +38,7 @@ switch ($action) {
             break;
         }
         friend_request_send($myId, (int) $target['id']);
-		
+        
         $back = 'user.php?id=' . rawurlencode((string) $target['username']);
         $rt = (string) ($_POST['return_to'] ?? '');
         if (strpos($rt, 'tab=friends') !== false) {
@@ -62,7 +62,7 @@ switch ($action) {
         break;
     case 'unfriend':
         $otherName = trim((string) ($_POST['other_user'] ?? ''));
-        $other = user_by_username($otherName);
+        $other = user_by_username_including_deleted($otherName);
         if ($other !== null) {
             friend_unfriend($myId, (int) $other['id']);
         }
