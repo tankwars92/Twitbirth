@@ -47,10 +47,7 @@ $pageTitle = $titles[$p];
 			<b><font size="3" class="h2_heading">About Us</font></b>
 
 			<p>
-				Twitbirth was born as an interesting side project within the offices
-				of <a href="https://web.archive.org/web/20070105083352/http://odeo.com/">Odeo</a> in March of 2006. We are
-				a part of <a href="https://web.archive.org/web/20070105083352/http://obvious.com/">Obvious</a> Corporation in
-				the beautiful South Park neighborhood of San Francisco, California.
+				Twitbirth is a website that copies Twitter from 2006 and works in <b>Internet Explorer 6</b> browsers and above. The source code is completely open, you can find it <a href="https://github.com/tankwars92/Twitbirth/" target="_blank">here</a>.
 			</p>
 <?php } elseif ($p === 'contact') { ?>
 			<b><font size="3" class="h2_heading">Contact Us</font></b>
