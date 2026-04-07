@@ -671,11 +671,10 @@ function render_sidebar_logged_in(?array $me): void
     $u = rawurlencode($me['username']);
     $av = avatar_public_url($me['avatar_path'] ?? null);
     echo '<div class="user_sidebar_chrome">';
-    echo '<a href="user.php?id=' . esc_html($u) . '">Profile</a> | <a href="settings.php">Settings</a> | <a href="friends.php">Friends</a> | <a href="logout.php">Logout</a>';
+    echo '<a href="user.php?id=' . esc_html($u) . '">Home</a> | <a href="user.php?id=' . esc_html($u) . '">Your Profile</a> | <a href="public_timeline.php">Public Timeline</a> | <a href="settings.php">Settings</a> | <a href="friends.php">Friends</a> | <a href="logout.php">Sign out</a>';
     echo '</div>';
 }
 
-/** Default logo HTML for the top row (accesskey on home link). */
 function render_default_site_logo_html(): string
 {
     return '<b><font size="3" id="header" class="site_heading"><a href="index.php" title="Twitbirth: home" accesskey="1"><img alt="Twitbirth.com" height="49" src="images/Twitbirth.png" width="210" /></a></font></b>';
@@ -691,11 +690,6 @@ function render_user_top_menu_bar(?array $me): void
     echo '</div>';
 }
 
-/**
- * Logo row: left = site logo, right = logged-in user menu (#user_menu_top).
- *
- * @param string $logoHtml full markup for left cell; empty string uses {@see render_default_site_logo_html()}
- */
 function render_site_header_top_row(?array $me, string $logoHtml = ''): void
 {
     if ($logoHtml === '') {
@@ -711,7 +705,6 @@ function render_site_header_top_row(?array $me, string $logoHtml = ''): void
     echo '</tr></table>';
 }
 
-/** Incoming friend requests callout for the green sidebar (below .msg when present). */
 function render_sidebar_friend_requests_notice(?array $me): void
 {
     if ($me === null) {

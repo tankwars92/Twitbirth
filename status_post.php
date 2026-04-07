@@ -18,6 +18,9 @@ if ($me === null) {
 }
 
 $status = isset($_POST['status']) ? trim((string) $_POST['status']) : '';
+if ($status === '' && isset($_POST['text_content'])) {
+    $status = trim((string) $_POST['text_content']);
+}
 if ($status === '') {
     echo 'Please enter a status.';
     exit;

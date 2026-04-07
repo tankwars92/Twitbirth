@@ -63,14 +63,6 @@ $statusMaxChars = 500;
 <body class="account" id="profile">
  
 	<style type="text/css">
-			a {color: #0000ff;}
-		body {
-			color: #000000;
-			background-color: #9ae4e8;
-						background: #9ae4e8 url(images/bg.gif) fixed no-repeat top left;
-			      text-align: center; 
-      font: 0.75em/1.5 Helvetica, Arial, sans-serif; 
-		}
 		font.thumb, font.thumb a { color: #000000; }
 		#content font.thumb {
 			text-align: left;
@@ -116,90 +108,6 @@ $statusMaxChars = 500;
 			padding: 0;
 			vertical-align: middle;
 		}
-		#content #doingForm {
-			max-width: 42em;
-			margin: 0.35em auto 0.75em;
-			text-align: left;
-		}
-		* html #content #doingForm { width: 42em; }
-		
-		#content #doingForm .bar {
-			background: #E3F6FA;
-			border: none;
-			padding: 6px 10px;
-			margin: 0;
-			text-align: left;
-			line-height: 1.35;
-			position: relative;
-			zoom: 1;
-		}
-		#content #doingForm .bar table.doing_bar_row {
-			width: 100%;
-			border-collapse: collapse;
-			margin: 0;
-			padding: 0;
-		}
-		#content #doingForm .bar .doing_bar_title_cell {
-			vertical-align: middle;
-			text-align: left;
-			padding: 0 8px 0 0;
-		}
-		#content #doingForm .bar .doing_bar_title_cell font {
-			font: normal 1.5em/1.35 Helvetica, Arial, sans-serif;
-			color: #000;
-		}
-		#content #doingForm .bar .doing_bar_count_cell {
-			vertical-align: middle;
-			text-align: right;
-			width: 1%;
-			white-space: nowrap;
-			padding: 0;
-		}
-		#content #doingForm .bar .status_char_remain {
-			position: static;
-			top: auto;
-			right: auto;
-			display: inline;
-			color: #888;
-			font-size: 0.95em;
-			line-height: 1.35;
-		}
-		#content #doingForm .bar .status_char_remain b {
-			font-weight: bold;
-			color: #888;
-		}
-		#content #doingForm .info {
-			background: #fff;
-			padding: 0 10px 10px;
-			margin: 0;
-			text-align: center;
-		}
-		
-		#content #doingForm table.doing_ta_frame {
-			width: 100%;
-			table-layout: fixed;
-			border-collapse: collapse;
-			margin: 0;
-			padding: 0;
-		}
-		#content #doingForm table.doing_ta_frame td {
-			padding: 0 4px;
-			margin: 0;
-			vertical-align: top;
-		}
-		
-		#content #doingForm table.doing_ta_frame textarea {
-			display: block;
-			width: 460px;
-			margin: 0;
-			padding: 4px;
-			font: 1.15em/1.1 Helvetica, Arial, sans-serif;
-			background: #fff;
-			overflow: hidden;
-			word-wrap: break-word;
-			word-break: break-word;
-		}
-		#content #doingForm #doing_submit { display: block; padding: 3px 5px; margin: 8px 0 0; }
     </style>
 	
 	<ul id="accessibility">
@@ -267,22 +175,44 @@ $statusMaxChars = 500;
 <?php } ?>
 <br>
 <?php if ($isOwn) { ?>
-<div id="doingForm">
-	<form action="status_post.php" method="post" onsubmit="return post_status_update();">
-		<div class="bar">
-			<table class="doing_bar_row" cellpadding="0" cellspacing="0" border="0"><tr>
-				<td class="doing_bar_title_cell" valign="middle" align="left"><font size="3">What are you doing?</font></td>
-				<td class="doing_bar_count_cell" valign="middle" align="right"><span class="status_char_remain">Characters available: <b id="status_chars_left"><?= (int) $statusMaxChars ?></b></span></td>
-			</tr></table>
-		</div>
-		<div class="info">
-			<table class="doing_ta_frame" cellpadding="0" cellspacing="0" border="0"><tr><td>
-			<textarea name="status" id="status_input" rows="3" cols="68" maxlength="<?= (int) $statusMaxChars ?>"></textarea>
-			</td></tr></table><br />
-			<center><input type="submit" name="commit" id="doing_submit" class="submit" value="Update" style="font-weight: bold;" /></center>
-		</div>
-	</form>
-</div>
+    <div>
+        <form id="doing-form" action="" method="post" onsubmit="return post_status_update();">
+            <input id="csrf_token" name="csrf_token" type="hidden" value="">
+            <input id="reply_id" name="reply_id" type="hidden" value="">
+            <div class="bar">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>
+                            <h3 id="rt"
+                                style="display:none;">Replying to {}</h3>
+                            <h3 id="wryd">What are you doing?</h3>
+                        </th>
+                        <th>
+                            <span id="characters-available"><span
+                                    class="chars-available-txt">Characters available: </span><b
+                                    id="characters"><?= (int) $statusMaxChars ?></b></span>
+                            <span id="submit-loading"></span>
+                        </th>
+                    </tr>
+                    </thead>
+                </table>
+
+            </div>
+            <div class="info">
+                <textarea id="text_content" maxlength="" name="text_content" oninput="doingForm()">
+</textarea>
+
+            </div>
+            <ul class="suggestions alt"></ul>
+            <div class="center">
+                <div class="submit">
+                    <input class="button" id="submit" name="submit" type="submit" value="Update">
+                </div>
+            </div>
+
+        </form>
+    </div>
 <script type="text/javascript">
 /* <![CDATA[ */
 var STATUS_MAX_LEN = <?= (int) $statusMaxChars ?>;
@@ -298,9 +228,9 @@ function set_elem_text(el, s) {
 	}
 }
 
-function update_status_char_count() {
-	var ta = document.getElementById("status_input");
-	var el = document.getElementById("status_chars_left");
+function doingForm() {
+	var ta = document.getElementById("text_content");
+	var el = document.getElementById("characters");
 	if (ta == null || el == null) {
 		return;
 	}
@@ -333,7 +263,7 @@ function create_http_request() {
 }
 
 function post_status_update() {
-	var ta = document.getElementById("status_input");
+	var ta = document.getElementById("text_content");
 	if (ta == null) {
 		return false;
 	}
@@ -367,12 +297,12 @@ function post_status_update() {
 }
 
 (function () {
-	var ta = document.getElementById("status_input");
+	var ta = document.getElementById("text_content");
 	if (ta == null) {
 		return;
 	}
 	function bind() {
-		update_status_char_count();
+		doingForm();
 	}
 	function delayed_bind() {
 		setTimeout(bind, 0);
