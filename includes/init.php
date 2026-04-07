@@ -329,7 +329,7 @@ function avatar_public_url(?string $avatarPath): string
     if ($avatarPath !== null && $avatarPath !== '' && is_file(APP_ROOT . '/' . str_replace('\\', '/', $avatarPath))) {
         return $avatarPath;
     }
-    return 'images/no_avatar.png';
+    return 'images/no_avatar.gif';
 }
 
 function save_avatar_after_register(int $userId, ?array $fileUser): ?string

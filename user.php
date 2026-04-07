@@ -108,6 +108,7 @@ $statusMaxChars = 500;
 			padding: 0;
 			vertical-align: middle;
 		}
+		.tabMenu li a {text-decoration: underline;}
     </style>
 	
 	<ul id="accessibility">

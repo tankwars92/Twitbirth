@@ -36,7 +36,7 @@ $featuredPosters = users_top_by_status_count(5);
 	
 	<div id="container" class="subpage">
 		<?php render_site_header_top_row($me); ?>
-
+				
 		<div id="content"><div class="wrapper">	
 			
 
@@ -97,7 +97,7 @@ if ($rows === []) {
 
 
 		</div></div><hr>
-
+	
 	<div id="side">
 <?php if ($me === null) { ?>
 <div class="notify">
@@ -131,7 +131,7 @@ if ($featuredPosters === []) {
 </ul>
 
 
-	</div>
+</div>
 		<?php render_site_footer(); ?>
 			</div>
 
