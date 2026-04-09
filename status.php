@@ -95,7 +95,7 @@ $sid = (int) $row['id'];
     			<span class="meta">
     				
     				    					 <?= esc_html($permalinkTime) ?>
-    				    				from web
+    				    				from <?= esc_html(status_source_label($row)) ?>
     				<span id="status_actions_<?= $sid ?>">
 </span>
 

@@ -114,10 +114,12 @@ CREATE TABLE IF NOT EXISTS statuses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     body TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'web',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 SQL);
+    ensure_column($pdo, 'statuses', 'source', "TEXT NOT NULL DEFAULT 'web'");
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_statuses_user_created ON statuses (user_id, created_at)');
     migrate_legacy_statuses($pdo);
     $pdo->exec(<<<'SQL'
@@ -217,20 +219,20 @@ function migrate_legacy_statuses(PDO $pdo): void
     if ($q === false) {
         return;
     }
-    $ins = $pdo->prepare('INSERT INTO statuses (user_id, body, created_at) VALUES (?,?,?)');
+    $ins = $pdo->prepare('INSERT INTO statuses (user_id, body, source, created_at) VALUES (?,?,?,?)');
     foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
         $when = $r['status_updated_at'] ?? null;
         if ($when === null || $when === '') {
             $when = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
         }
-        $ins->execute([(int) $r['id'], (string) $r['current_status'], $when]);
+        $ins->execute([(int) $r['id'], (string) $r['current_status'], 'web', $when]);
     }
 }
 
 function statuses_for_user(int $userId, int $limit = 100): array
 {
     $limit = max(1, min(5000, $limit));
-    $st = app_pdo()->prepare('SELECT id, user_id, body, created_at FROM statuses WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT ' . $limit);
+    $st = app_pdo()->prepare('SELECT id, user_id, body, source, created_at FROM statuses WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT ' . $limit);
     $st->execute([$userId]);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC);
 
@@ -260,7 +262,7 @@ function latest_status_id(int $userId): ?int
 function status_by_id(int $statusId): ?array
 {
     $st = app_pdo()->prepare(
-        'SELECT s.id, s.user_id, s.body, s.created_at, u.username, u.display_name, u.avatar_path
+        'SELECT s.id, s.user_id, s.body, s.source, s.created_at, u.username, u.display_name, u.avatar_path
          FROM statuses s INNER JOIN users u ON u.id = s.user_id WHERE s.id = ?'
     );
     $st->execute([$statusId]);
@@ -273,7 +275,7 @@ function public_timeline(int $limit = 100): array
 {
     $limit = max(1, min(500, $limit));
     $st = app_pdo()->prepare(
-        'SELECT s.id, s.user_id, s.body, s.created_at, u.username, u.display_name, u.avatar_path
+        'SELECT s.id, s.user_id, s.body, s.source, s.created_at, u.username, u.display_name, u.avatar_path
          FROM statuses s
          INNER JOIN users u ON u.id = s.user_id
          WHERE COALESCE(u.exclude_from_public_timeline, 0) = 0
@@ -307,10 +309,10 @@ function users_top_by_status_count(int $limit = 5): array
 
 function ensure_column(PDO $pdo, string $table, string $column, string $sqlType): void
 {
-    if ($table !== 'users') {
+    if (!in_array($table, ['users', 'statuses'], true)) {
         return;
     }
-    $st = $pdo->query('PRAGMA table_info(users)');
+    $st = $pdo->query('PRAGMA table_info(' . $table . ')');
     if ($st === false) {
         return;
     }
@@ -319,7 +321,7 @@ function ensure_column(PDO $pdo, string $table, string $column, string $sqlType)
             return;
         }
     }
-    $pdo->exec('ALTER TABLE users ADD COLUMN ' . $column . ' ' . $sqlType);
+    $pdo->exec('ALTER TABLE ' . $table . ' ADD COLUMN ' . $column . ' ' . $sqlType);
 }
 
 const AVATAR_DIR = APP_ROOT . '/uploads/avatars';
@@ -594,7 +596,7 @@ function statuses_friends_last_hours(int $profileUserId, int $hours, int $limit 
     }
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $st = app_pdo()->prepare(
-        'SELECT s.id, s.user_id, s.body, s.created_at, u.username, u.display_name, u.avatar_path
+        'SELECT s.id, s.user_id, s.body, s.source, s.created_at, u.username, u.display_name, u.avatar_path
          FROM statuses s
          INNER JOIN users u ON u.id = s.user_id
          WHERE s.user_id IN (' . $placeholders . ')
@@ -616,20 +618,77 @@ function user_by_id(int $id): ?array
     return $row ?: null;
 }
 
+function latest_status_source_for_user(int $userId): string
+{
+    $st = app_pdo()->prepare('SELECT source FROM statuses WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 1');
+    $st->execute([$userId]);
+    $v = (string) ($st->fetchColumn() ?: 'web');
+    $v = strtolower(trim($v));
+    return $v === 'api' ? 'API' : 'web';
+}
+
+function status_source_label(array $statusRow): string
+{
+    $v = strtolower(trim((string) ($statusRow['source'] ?? 'web')));
+    return $v === 'api' ? 'API' : 'web';
+}
+
 function user_by_username(string $username): ?array
 {
-    $st = app_pdo()->prepare('SELECT id, username, display_name, email, time_zone, bio, location, web, avatar_path, is_deleted, exclude_from_public_timeline, current_status, status_updated_at, created_at FROM users WHERE username = ? COLLATE NOCASE AND is_deleted = 0');
-    $st->execute([trim($username)]);
+    $pdo = app_pdo();
+    $sql = 'SELECT id, username, display_name, email, time_zone, bio, location, web, avatar_path, is_deleted, exclude_from_public_timeline, current_status, status_updated_at, created_at FROM users WHERE username = ? COLLATE NOCASE AND is_deleted = 0';
+    $st = $pdo->prepare($sql);
+    $st->execute([$username]);
     $row = $st->fetch();
-    return $row ?: null;
+    if ($row) {
+        return $row;
+    }
+
+    $alts = [];
+    $alts[] = rawurldecode($username);
+    $alts[] = urldecode($username);
+    $alts[] = str_replace('+', ' ', $username);
+    $alts[] = preg_replace('/\s+/', ' ', str_replace('+', ' ', rawurldecode($username)));
+    foreach ($alts as $alt) {
+        if (!is_string($alt) || $alt === '' || strcasecmp($alt, $username) === 0) {
+            continue;
+        }
+        $st->execute([$alt]);
+        $row = $st->fetch();
+        if ($row) {
+            return $row;
+        }
+    }
+    return null;
 }
 
 function user_by_username_including_deleted(string $username): ?array
 {
-    $st = app_pdo()->prepare('SELECT id, username, display_name, email, time_zone, bio, location, web, avatar_path, is_deleted, exclude_from_public_timeline, current_status, status_updated_at, created_at FROM users WHERE username = ? COLLATE NOCASE');
-    $st->execute([trim($username)]);
+    $pdo = app_pdo();
+    $sql = 'SELECT id, username, display_name, email, time_zone, bio, location, web, avatar_path, is_deleted, exclude_from_public_timeline, current_status, status_updated_at, created_at FROM users WHERE username = ? COLLATE NOCASE';
+    $st = $pdo->prepare($sql);
+    $st->execute([$username]);
     $row = $st->fetch();
-    return $row ?: null;
+    if ($row) {
+        return $row;
+    }
+
+    $alts = [];
+    $alts[] = rawurldecode($username);
+    $alts[] = urldecode($username);
+    $alts[] = str_replace('+', ' ', $username);
+    $alts[] = preg_replace('/\s+/', ' ', str_replace('+', ' ', rawurldecode($username)));
+    foreach ($alts as $alt) {
+        if (!is_string($alt) || $alt === '' || strcasecmp($alt, $username) === 0) {
+            continue;
+        }
+        $st->execute([$alt]);
+        $row = $st->fetch();
+        if ($row) {
+            return $row;
+        }
+    }
+    return null;
 }
 
 function current_user(): ?array
@@ -737,6 +796,7 @@ function render_site_footer(): void
         <li class="first">© 2026 BitByByte</li> '
         . menu_item('about', 'About Us', $current) .
         menu_item('contact', 'Contact', $current) .
+        menu_item('api', 'API', $current) .
     '</ul>
 
 <br>

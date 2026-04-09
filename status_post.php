@@ -32,7 +32,7 @@ if (strlen($status) > 500) {
 
 $pdo = app_pdo();
 
-$pdo->prepare('INSERT INTO statuses (user_id, body, created_at) VALUES (?,?,datetime(\'now\'))')->execute([$me['id'], $status]);
+$pdo->prepare('INSERT INTO statuses (user_id, body, source, created_at) VALUES (?,?,?,datetime(\'now\'))')->execute([$me['id'], $status, 'web']);
 $pdo->prepare('UPDATE users SET current_status = ?, status_updated_at = datetime(\'now\') WHERE id = ?')->execute([$status, $me['id']]);
 
 echo 'Your status has been saved.';

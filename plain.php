@@ -10,6 +10,7 @@ $p = preg_replace('#[^a-z0-9_-]#i', '', $p);
 $titles = [
     'about' => 'Twitbirth / About Us',
     'contact' => 'Twitbirth / Contact Us',
+    'api' => 'Twitbirth / API',
 ];
 
 if ($p === '' || !isset($titles[$p])) {
@@ -55,6 +56,36 @@ $pageTitle = $titles[$p];
 			<p>
 				You can contact us at <a href="mailto:bitbybyte@w10.site">bitbybyte@w10.site</a> / <a href="http://kicq.ru/reg117623/">KICQ</a> <b>3-739-186</b>.
 			</p>
+<?php } elseif ($p === 'api') { ?>
+			<b><font size="3" class="h2_heading">Twitbirth API</font></b>
+			<p>Want to make a badge, timeline visualization, or your own client? Twitbirth exposes part of internals via JSON and XML.</p>
+			<p>All methods (except Public Timeline) require HTTP Basic Auth. Username is your account email, password is your account password.</p>
+
+			<p><b>Public Timeline</b></p>
+			<p><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?public_timeline.json</code><br><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?public_timeline.xml</code></p>
+
+			<p><b>Timeline of you and your friends</b></p>
+			<p><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?friends_timeline.json</code><br><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?friends_timeline.xml</code></p>
+
+			<p><b>A list of your friends and their current update</b></p>
+			<p><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?friends.json</code><br><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?friends.xml</code></p>
+
+			<p><b>A list of your followers and their current update</b></p>
+			<p><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?followers.json</code><br><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?followers.xml</code></p>
+
+			<p><b>Updating your status</b></p>
+			<p>Best done with HTTP POST (GET also works):</p>
+			<p><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?update.json&amp;status=testing</code><br><code>http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?update.xml&amp;status=testing</code></p>
+			
+			<br>
+			<p><b>Request examples</b></p>
+			<p><code>GET /api.php?public_timeline.json</code></p>
+			<p><code>GET /api.php?friends_timeline.json</code> (Basic Auth required)</p>
+			<p><code>POST /api.php?update.json</code> with body <code>status=Hello+World</code> (Basic Auth required)</p>
+			<p><code>curl -u "YOUR_EMAIL:YOUR_PASSWORD" -d "status=Hello+World" "http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?update.json"</code></p>
+			<p><code>curl -u "YOUR_EMAIL:YOUR_PASSWORD" "http://<?= $_SERVER['HTTP_HOST'] ?>/api.php?friends.json"</code></p>
+
+			<p>That is all for now. More to come.</p>
 <?php } ?>
 			</div>
 		</div>

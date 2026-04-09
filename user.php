@@ -30,6 +30,7 @@ $hasStatus = $rawStatus !== '';
 $stAt = $profile['status_updated_at'] ?? null;
 $statusMetaPhrase = ($hasStatus && $stAt !== null && $stAt !== '') ? format_status_time($stAt) : '';
 $latestSid = latest_status_id((int) $profile['id']);
+$latestSourceLabel = latest_status_source_for_user((int) $profile['id']);
 
 $profileId = (int) $profile['id'];
 $viewAll = isset($_GET['view_all']) && (string) $_GET['view_all'] !== '' && (string) $_GET['view_all'] !== '0';
@@ -168,7 +169,7 @@ $statusMaxChars = 500;
 		<?php } elseif ($statusMetaPhrase !== '') { ?>
 		<span><?= esc_html($statusMetaPhrase) ?></span>
 		<?php } ?>
-		<?php if ($statusMetaPhrase !== '') { ?> from web<?php } ?>
+		<?php if ($statusMetaPhrase !== '') { ?> from <?= esc_html($latestSourceLabel) ?><?php } ?>
 
 		<span id="status_actions_wrap"></span>
 	</p>
@@ -378,7 +379,7 @@ if ($tab === 'friends') {
 
 		<span class="meta">
 						<a href="status.php?id=<?= $sid ?>"><?= esc_html($timePhrase) ?></a>
-						from web
+						from <?= esc_html(status_source_label($s)) ?>
 
 			<span id="status_actions_<?= $sid ?>">
 </span>
@@ -416,7 +417,7 @@ if ($tab === 'friends') {
 
 		<span class="meta">
 						<a href="status.php?id=<?= $sid ?>"><?= esc_html($timePhrase) ?></a>
-						from web
+						from <?= esc_html(status_source_label($s)) ?>
 
 			<span id="status_actions_<?= $sid ?>">
 </span>

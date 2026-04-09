@@ -81,7 +81,7 @@ if ($rows === []) {
 		<span class="meta">
 			
 						<a href="status.php?id=<?= $sid ?>"><?= esc_html($tp) ?></a>
-						from web
+						from <?= esc_html(status_source_label($s)) ?>
 
 			<span id="status_actions_<?= $sid ?>">
 </span>

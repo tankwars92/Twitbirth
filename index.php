@@ -52,12 +52,24 @@ $featuredPosters = users_top_by_status_count(5);
     font-size: 0;
     height: 200px;
     width: 500px;
+    overflow: hidden;
 }
 #tour object, #tour embed {
     display: block;
     margin: 0;
     padding: 0;
     border: 0;
+    width: 500px;
+    height: 200px;
+}
+
+* html #content #tour {
+    width: 500px;
+    overflow: hidden;
+}
+
+* html body#front #content table.doing {
+    width: auto;
 }
 </style>
 
@@ -143,7 +155,7 @@ if ($homeRows === []) {
 		<span class="meta">
 			
 						<a href="status.php?id=<?= $sid ?>"><?= esc_html($tp) ?></a>
-						from web
+						from <?= esc_html(status_source_label($s)) ?>
 
 			<span id="status_actions_<?= $sid ?>">
 </span>
@@ -164,7 +176,8 @@ if ($homeRows === []) {
 
 	<div id="side">
 <?php if ($me === null) { ?>
-		<div class="msg">
+		<div class="msg" style="padding-top: 15px;">
+			
 	<b><font size="3" class="msg_heading">Please Sign In!</font></b>
 </div>
 
