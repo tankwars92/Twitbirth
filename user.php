@@ -174,6 +174,8 @@ $statusMaxChars = 500;
 		<span id="status_actions_wrap"></span>
 	</p>
 	</div>
+<?php } else { ?>
+<br>
 <?php } ?>
 <br>
 <?php if ($isOwn) { ?>
