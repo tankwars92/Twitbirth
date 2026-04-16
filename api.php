@@ -239,7 +239,8 @@ if ($methodKey === 'update') {
         echo 'Missing status.';
         exit;
     }
-    if (strlen($status) > 500) {
+    $len = function_exists('mb_strlen') ? mb_strlen($status, 'UTF-8') : strlen($status);
+    if ($len > 500) {
         http_response_code(400);
         header('Content-Type: text/plain; charset=UTF-8');
         echo 'Status is too long (500 characters maximum).';
